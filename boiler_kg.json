@@ -1,0 +1,1316 @@
+{
+  "directed": true,
+  "multigraph": true,
+  "graph": {
+    "name": "boiler_process_knowledge_graph",
+    "description": "Process connectivity, instrumentation, and control-loop graph for the CFB boiler described in boiler_historian.duckdb.",
+    "sources": [
+      "Fig. 3 (process flow diagram), Hu, W. et al. 'A long-tailed distribution time-series dataset in boiler equipment', Scientific Data (2025), DOI 10.1038/s41597-025-05096-4 -- full text not accessible; PFD figure only.",
+      "boiler_historian.duckdb's tags table (tag name -> description)"
+    ],
+    "node_count": 64,
+    "edge_count": 98
+  },
+  "nodes": [
+    {
+      "id": "coal_bin",
+      "type": "Equipment.Storage",
+      "label": "Coal Bin",
+      "provenance": "pfd"
+    },
+    {
+      "id": "coal_feeder",
+      "type": "Equipment.Feeder",
+      "label": "Coal Feeder",
+      "provenance": "pfd"
+    },
+    {
+      "id": "furnace",
+      "type": "Equipment.CombustionChamber",
+      "label": "CFB Furnace",
+      "provenance": "pfd",
+      "note": "Circulating fluidized bed combustion chamber; coal + return solids burned on a fluidized bed. RAG docs split this into 'furnace_chamber' and 'furnace_lower_hearth' equipment ids, but ds_cfb_furnace.md's sensor list has no distinct upper/lower zone assignment to split this node on -- both docs ids resolve to this one node via equipment_crosswalk.py."
+    },
+    {
+      "id": "steam_drum",
+      "type": "Equipment.Vessel",
+      "label": "Steam Drum",
+      "provenance": "inferred",
+      "note": "Not drawn as a distinct vessel in Fig. 3, but required by PTCA_8322A ('steam drum pressure') and by the saturated-steam feed into the low temp superheater. Placed between the economiser/furnace water circuit and the low temp superheater. VERIFY against real P&ID."
+    },
+    {
+      "id": "cyclone_separator_left",
+      "type": "Equipment.Separator",
+      "label": "Left Cyclone Separator",
+      "provenance": "pfd"
+    },
+    {
+      "id": "cyclone_separator_right",
+      "type": "Equipment.Separator",
+      "label": "Right Cyclone Separator",
+      "provenance": "pfd"
+    },
+    {
+      "id": "loop_seal_chamber_left",
+      "type": "Equipment.LoopSeal",
+      "label": "Left Loop Seal / Secondary-Wind Chamber",
+      "provenance": "pfd",
+      "note": "Purple chamber under the left cyclone dipleg, aerated by 'secondary wind' per Fig. 3 label -- a non-mechanical (L-valve/loop-seal) solids return device."
+    },
+    {
+      "id": "ash_reclaimer_right",
+      "type": "Equipment.AshHandling",
+      "label": "Reclaimer",
+      "provenance": "pfd",
+      "note": "Purple chamber under the right cyclone dipleg, labelled 'Reclaimer' in Fig. 3. Handles bed-material reclaim / coarse ash removal from the right cyclone leg."
+    },
+    {
+      "id": "return_air_injection_left",
+      "type": "Equipment.InjectionPoint",
+      "label": "Return Air Injection (left)",
+      "provenance": "pfd",
+      "note": "'Return Air' point in Fig. 3 where recirculated solids + fluidizing air re-enter the furnace from the left loop seal leg."
+    },
+    {
+      "id": "return_air_injection_right",
+      "type": "Equipment.InjectionPoint",
+      "label": "Return Air Injection (right)",
+      "provenance": "inferred",
+      "note": "Mirrored right-side return-air injection point, inferred to match FT_8306B ('return air chamber flow, right') -- Fig. 3 only labels one 'Return Air' point explicitly; the left/right split is inferred from the sensor pair."
+    },
+    {
+      "id": "rewind_fan_interlock_valve",
+      "type": "Valve.CheckValve",
+      "label": "Rewind Fan Interlock (check valve)",
+      "provenance": "pfd",
+      "note": "Red 'M' + check-valve symbol on the solids-return line in Fig. 3; prevents backflow into the cyclone diplegs / loop seal."
+    },
+    {
+      "id": "high_temp_superheater",
+      "type": "Equipment.HeatExchanger.Superheater",
+      "label": "High Temperature Superheater",
+      "provenance": "pfd"
+    },
+    {
+      "id": "low_temp_superheater",
+      "type": "Equipment.HeatExchanger.Superheater",
+      "label": "Low Temperature Superheater",
+      "provenance": "pfd"
+    },
+    {
+      "id": "primary_desuperheater",
+      "type": "Equipment.HeatExchanger.Desuperheater",
+      "label": "Primary Desuperheater",
+      "provenance": "pfd",
+      "note": "First-stage attemperator, between low temp and high temp superheaters."
+    },
+    {
+      "id": "secondary_desuperheater",
+      "type": "Equipment.HeatExchanger.Desuperheater",
+      "label": "Secondary Desuperheater",
+      "provenance": "pfd",
+      "note": "Second-stage attemperator, between high temp superheater and the main steam header."
+    },
+    {
+      "id": "upper_stage_economiser",
+      "type": "Equipment.HeatExchanger.Economiser",
+      "label": "Upper Stage Economiser",
+      "provenance": "pfd",
+      "note": "RAG docs use one generic 'economizer' equipment id covering both economiser stages -- resolves to this node + lower_stage_economiser via equipment_crosswalk.py."
+    },
+    {
+      "id": "lower_stage_economiser",
+      "type": "Equipment.HeatExchanger.Economiser",
+      "label": "Lower Stage Economiser",
+      "provenance": "pfd"
+    },
+    {
+      "id": "secondary_air_preheater_1",
+      "type": "Equipment.HeatExchanger.AirPreheater",
+      "label": "Secondary Air Preheater (stage 1)",
+      "provenance": "pfd",
+      "note": "Upper of the two 'Secondary air preheater' boxes in Fig. 3, in the flue-gas path immediately after the economisers, before the primary air preheater. RAG docs use one generic 'secondary_air_preheater' id covering both stages -- resolves to this node + secondary_air_preheater_2 via equipment_crosswalk.py."
+    },
+    {
+      "id": "primary_air_preheater",
+      "type": "Equipment.HeatExchanger.AirPreheater",
+      "label": "Primary Air Preheater",
+      "provenance": "pfd"
+    },
+    {
+      "id": "secondary_air_preheater_2",
+      "type": "Equipment.HeatExchanger.AirPreheater",
+      "label": "Secondary Air Preheater (stage 2)",
+      "provenance": "pfd",
+      "note": "Lower of the two 'Secondary air preheater' boxes in Fig. 3, in the flue-gas path after the primary air preheater, before the ID fan."
+    },
+    {
+      "id": "primary_fan",
+      "type": "Equipment.Fan",
+      "label": "Primary Fan",
+      "provenance": "pfd",
+      "note": "Forced-draft fan, primary (fluidizing) air."
+    },
+    {
+      "id": "secondary_fan",
+      "type": "Equipment.Fan",
+      "label": "Secondary Fan",
+      "provenance": "pfd",
+      "note": "Forced-draft fan, secondary (overfire) air."
+    },
+    {
+      "id": "induced_draft_fan",
+      "type": "Equipment.Fan",
+      "label": "Induced Draft Fan (Ventilator)",
+      "provenance": "pfd",
+      "note": "Labelled 'Ventilator' in Fig. 3; pulls flue gas through the backpass to the chimney. Mapped to the YFJ3_* tags (motor current, bearing vibration) based on tag description -- Fig. 3 itself does not name an 'IDF', only 'Ventilator'."
+    },
+    {
+      "id": "chimney",
+      "type": "Equipment.Stack",
+      "label": "Chimney",
+      "provenance": "pfd"
+    },
+    {
+      "id": "steamer_bag",
+      "type": "Equipment.Vessel",
+      "label": "Steamer Bag (continuous blowdown flash tank)",
+      "provenance": "pfd"
+    },
+    {
+      "id": "mains_water_supply",
+      "type": "Boundary.Utility",
+      "label": "Mains Water Supply",
+      "provenance": "pfd"
+    },
+    {
+      "id": "steam_outlet",
+      "type": "Boundary.Outlet",
+      "label": "Main Steam Header / Boiler Outlet",
+      "provenance": "pfd",
+      "note": "Named 'steam_outlet' to match the RAG docs' equipment id (originally 'main_steam_header' in this KG; renamed for cross-reference consistency)."
+    },
+    {
+      "id": "primary_desuperheater_spray_valve",
+      "type": "Valve.ControlValve",
+      "label": "Primary Desuperheater Spray Control Valve",
+      "provenance": "columns_csv",
+      "tag": "TV_8329ZC",
+      "note": "Named 'Primary desuperheater outlet steam temperature regulating valve' in the historian tags table -- explicitly a control (regulating) valve."
+    },
+    {
+      "id": "secondary_desuperheater_spray_valves",
+      "type": "Valve.ControlValve",
+      "label": "Secondary Desuperheater Spray Valves",
+      "provenance": "pfd",
+      "note": "Multiple 'M' valves shown feeding the secondary desuperheater in Fig. 3; no individual flow/position tag exists among the 30 historian tags -- do not invent one."
+    },
+    {
+      "id": "continuous_blowdown_valve",
+      "type": "Valve.MotorOperated",
+      "label": "Continuous Blowdown Valve",
+      "provenance": "pfd",
+      "note": "'M' valve on the Continuous Sewage line between the steam drum and the Steamer Bag."
+    },
+    {
+      "id": "steam_temp_attemperation_primary",
+      "type": "ControlLoop",
+      "label": "Primary Steam-Temperature Attemperation Loop",
+      "provenance": "columns_csv",
+      "confidence": "explicit",
+      "note": "TV_8329ZC is literally named a 'regulating valve' -- this loop is directly evidenced by the tag set, not inferred."
+    },
+    {
+      "id": "furnace_draft_balance",
+      "type": "ControlLoop",
+      "label": "Furnace Draft / Negative-Pressure Balance",
+      "provenance": "inferred",
+      "confidence": "inferred_standard_practice",
+      "note": "Standard CFB practice: ID fan draw vs. FD (primary+secondary) fan input is balanced to hold slight furnace negative pressure. No explicit draft-controller output tag exists among the 30 historian tags -- only the PV side (PT_8313A-F) is instrumented in this dataset."
+    },
+    {
+      "id": "combustion_o2_trim",
+      "type": "ControlLoop",
+      "label": "Combustion Excess-Air (O2 Trim) Control",
+      "provenance": "inferred",
+      "confidence": "inferred_standard_practice",
+      "note": "Standard practice: flue-gas O2 (AIR_8301A/B) trims primary/secondary air flow. No explicit controller-output tag exists among the 30 historian tags."
+    },
+    {
+      "id": "bed_inventory_recirculation",
+      "type": "ProcessRelationship",
+      "label": "Bed Inventory / Solids Recirculation",
+      "provenance": "inferred",
+      "confidence": "inferred_standard_practice",
+      "note": "Loop-seal aeration ('secondary wind') controls solids recirculation rate back to the furnace; cyclone dP (ZCLCCY/YCLCCY) reflects solids capture, hearth dP (SXLTCYZ/SXLTCYY) reflects bed density. Related rather than a classic single PID loop in the available data."
+    },
+    {
+      "id": "AIR_8301A",
+      "type": "Sensor",
+      "label": "Flue gas O2 at economizer inlet (left)",
+      "provenance": "columns_csv",
+      "instrument_type": "oxygen_analyzer",
+      "units": "%",
+      "normal_min": 2.0,
+      "normal_max": null,
+      "range_source_min": "dcs_setpoint",
+      "range_source_max": null
+    },
+    {
+      "id": "AIR_8301B",
+      "type": "Sensor",
+      "label": "Flue gas O2 at economizer inlet (right)",
+      "provenance": "columns_csv",
+      "instrument_type": "oxygen_analyzer",
+      "units": "%",
+      "normal_min": 2.0,
+      "normal_max": null,
+      "range_source_min": "dcs_setpoint",
+      "range_source_max": null
+    },
+    {
+      "id": "FT_8301",
+      "type": "Sensor",
+      "label": "Primary fan outlet flow",
+      "provenance": "columns_csv",
+      "instrument_type": "flow",
+      "units": "m3/h",
+      "normal_min": 70000.0,
+      "normal_max": null,
+      "range_source_min": "dcs_setpoint",
+      "range_source_max": null
+    },
+    {
+      "id": "FT_8302",
+      "type": "Sensor",
+      "label": "Secondary fan outlet flow",
+      "provenance": "columns_csv",
+      "instrument_type": "flow",
+      "units": "m3/h",
+      "normal_min": 40000.0,
+      "normal_max": null,
+      "range_source_min": "dcs_setpoint",
+      "range_source_max": null
+    },
+    {
+      "id": "FT_8306A",
+      "type": "Sensor",
+      "label": "Return air chamber flow (left)",
+      "provenance": "columns_csv",
+      "instrument_type": "flow",
+      "units": "m3/h",
+      "normal_min": 5000.0,
+      "normal_max": null,
+      "range_source_min": "dcs_setpoint",
+      "range_source_max": null
+    },
+    {
+      "id": "FT_8306B",
+      "type": "Sensor",
+      "label": "Return air chamber flow (right)",
+      "provenance": "columns_csv",
+      "instrument_type": "flow",
+      "units": "m3/h",
+      "normal_min": 5000.0,
+      "normal_max": null,
+      "range_source_min": "dcs_setpoint",
+      "range_source_max": null
+    },
+    {
+      "id": "PTCA_8322A",
+      "type": "Sensor",
+      "label": "Steam drum pressure",
+      "provenance": "columns_csv",
+      "instrument_type": "pressure",
+      "units": "MPa",
+      "normal_min": 9.42,
+      "normal_max": 10.09,
+      "range_source_min": "observed_bound_no_alarms",
+      "range_source_max": "observed_bound_no_alarms"
+    },
+    {
+      "id": "PTCA_8324",
+      "type": "Sensor",
+      "label": "Main steam outlet pressure",
+      "provenance": "columns_csv",
+      "instrument_type": "pressure",
+      "units": "MPa",
+      "normal_min": 9.06,
+      "normal_max": 9.77,
+      "range_source_min": "observed_bound_no_alarms",
+      "range_source_max": "observed_bound_no_alarms"
+    },
+    {
+      "id": "PT_8313A",
+      "type": "Sensor",
+      "label": "Upper furnace pressure (A)",
+      "provenance": "columns_csv",
+      "instrument_type": "pressure",
+      "units": "Pa",
+      "normal_min": -484.7,
+      "normal_max": 75.33,
+      "range_source_min": "observed_bound_no_alarms",
+      "range_source_max": "observed_bound_no_alarms"
+    },
+    {
+      "id": "PT_8313B",
+      "type": "Sensor",
+      "label": "Upper furnace pressure (B)",
+      "provenance": "columns_csv",
+      "instrument_type": "pressure",
+      "units": "Pa",
+      "normal_min": -549.57,
+      "normal_max": 51.83,
+      "range_source_min": "observed_bound_no_alarms",
+      "range_source_max": "observed_bound_no_alarms"
+    },
+    {
+      "id": "PT_8313C",
+      "type": "Sensor",
+      "label": "Upper furnace pressure (C)",
+      "provenance": "columns_csv",
+      "instrument_type": "pressure",
+      "units": "Pa",
+      "normal_min": null,
+      "normal_max": 100.0,
+      "range_source_min": null,
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "PT_8313D",
+      "type": "Sensor",
+      "label": "Upper furnace pressure (D)",
+      "provenance": "columns_csv",
+      "instrument_type": "pressure",
+      "units": "Pa",
+      "normal_min": null,
+      "normal_max": 100.0,
+      "range_source_min": null,
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "PT_8313E",
+      "type": "Sensor",
+      "label": "Upper furnace pressure (E)",
+      "provenance": "columns_csv",
+      "instrument_type": "pressure",
+      "units": "Pa",
+      "normal_min": null,
+      "normal_max": 100.0,
+      "range_source_min": null,
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "PT_8313F",
+      "type": "Sensor",
+      "label": "Upper furnace pressure (F)",
+      "provenance": "columns_csv",
+      "instrument_type": "pressure",
+      "units": "Pa",
+      "normal_min": null,
+      "normal_max": 100.0,
+      "range_source_min": null,
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "SXLTCYY",
+      "type": "Sensor",
+      "label": "Hearth differential pressure (right)",
+      "provenance": "columns_csv",
+      "instrument_type": "differential_pressure",
+      "units": "Pa",
+      "normal_min": 800.0,
+      "normal_max": null,
+      "range_source_min": "dcs_setpoint",
+      "range_source_max": null
+    },
+    {
+      "id": "SXLTCYZ",
+      "type": "Sensor",
+      "label": "Hearth differential pressure (left)",
+      "provenance": "columns_csv",
+      "instrument_type": "differential_pressure",
+      "units": "Pa",
+      "normal_min": 800.0,
+      "normal_max": null,
+      "range_source_min": "dcs_setpoint",
+      "range_source_max": null
+    },
+    {
+      "id": "TE_8303",
+      "type": "Sensor",
+      "label": "Primary air preheater outlet air temp",
+      "provenance": "columns_csv",
+      "instrument_type": "temperature",
+      "units": "degC",
+      "normal_min": 198.64,
+      "normal_max": 226.38,
+      "range_source_min": "observed_bound_no_alarms",
+      "range_source_max": "observed_bound_no_alarms"
+    },
+    {
+      "id": "TE_8304",
+      "type": "Sensor",
+      "label": "Secondary air preheater outlet air temp",
+      "provenance": "columns_csv",
+      "instrument_type": "temperature",
+      "units": "degC",
+      "normal_min": null,
+      "normal_max": 230.0,
+      "range_source_min": null,
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "TE_8313B",
+      "type": "Sensor",
+      "label": "Upper furnace temperature (right side)",
+      "provenance": "columns_csv",
+      "instrument_type": "temperature",
+      "units": "degC",
+      "normal_min": 750.0,
+      "normal_max": null,
+      "range_source_min": "dcs_setpoint",
+      "range_source_max": null
+    },
+    {
+      "id": "TE_8319A",
+      "type": "Sensor",
+      "label": "Economizer flue gas outlet temp (left)",
+      "provenance": "columns_csv",
+      "instrument_type": "temperature",
+      "units": "degC",
+      "normal_min": null,
+      "normal_max": 185.0,
+      "range_source_min": null,
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "TE_8319B",
+      "type": "Sensor",
+      "label": "Economizer flue gas outlet temp (right)",
+      "provenance": "columns_csv",
+      "instrument_type": "temperature",
+      "units": "degC",
+      "normal_min": null,
+      "normal_max": 185.0,
+      "range_source_min": null,
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "TE_8332A",
+      "type": "Sensor",
+      "label": "Boiler outlet steam temperature - PRIMARY KPI",
+      "provenance": "columns_csv",
+      "instrument_type": "temperature",
+      "units": "degC",
+      "normal_min": 528.0,
+      "normal_max": 548.0,
+      "range_source_min": "dcs_setpoint",
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "TV_8329ZC",
+      "type": "Sensor",
+      "label": "Desuperheater spray valve position",
+      "provenance": "columns_csv",
+      "instrument_type": "valve_position",
+      "units": "%",
+      "normal_min": 1.64,
+      "normal_max": 35.48,
+      "range_source_min": "observed_bound_no_alarms",
+      "range_source_max": "observed_bound_no_alarms"
+    },
+    {
+      "id": "YCLCCY",
+      "type": "Sensor",
+      "label": "Cyclone separator dP (right)",
+      "provenance": "columns_csv",
+      "instrument_type": "differential_pressure",
+      "units": "Pa",
+      "normal_min": null,
+      "normal_max": 1800.0,
+      "range_source_min": null,
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "YFJ3_AI",
+      "type": "Sensor",
+      "label": "IDF motor current",
+      "provenance": "columns_csv",
+      "instrument_type": "current",
+      "units": "A",
+      "normal_min": 16.74,
+      "normal_max": 51.28,
+      "range_source_min": "observed_bound_no_alarms",
+      "range_source_max": "observed_bound_no_alarms"
+    },
+    {
+      "id": "YFJ3_ZD1",
+      "type": "Sensor",
+      "label": "IDF bearing vibration - drive end (alert 3.5, alarm 4.5, trip 11.0)",
+      "provenance": "columns_csv",
+      "instrument_type": "vibration",
+      "units": "mm/s",
+      "normal_min": null,
+      "normal_max": 3.5,
+      "range_source_min": null,
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "YFJ3_ZD2",
+      "type": "Sensor",
+      "label": "IDF bearing vibration - non-drive end (alert 3.5, alarm 4.5, trip 11.0)",
+      "provenance": "columns_csv",
+      "instrument_type": "vibration",
+      "units": "mm/s",
+      "normal_min": null,
+      "normal_max": 3.5,
+      "range_source_min": null,
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "YJJWSLL",
+      "type": "Sensor",
+      "label": "Desuperheating water flow",
+      "provenance": "columns_csv",
+      "instrument_type": "flow",
+      "units": "t/h",
+      "normal_min": 1.6,
+      "normal_max": 4.3,
+      "range_source_min": "observed_bound_no_alarms",
+      "range_source_max": "observed_bound_no_alarms"
+    },
+    {
+      "id": "ZCLCCY",
+      "type": "Sensor",
+      "label": "Cyclone separator dP (left)",
+      "provenance": "columns_csv",
+      "instrument_type": "differential_pressure",
+      "units": "Pa",
+      "normal_min": null,
+      "normal_max": 1800.0,
+      "range_source_min": null,
+      "range_source_max": "dcs_setpoint"
+    },
+    {
+      "id": "ZZQBCHLL",
+      "type": "Sensor",
+      "label": "Main steam flow (compensated)",
+      "provenance": "columns_csv",
+      "instrument_type": "flow",
+      "units": "t/h",
+      "normal_min": 100.0,
+      "normal_max": null,
+      "range_source_min": "dcs_setpoint",
+      "range_source_max": null
+    }
+  ],
+  "links": [
+    {
+      "source": "furnace",
+      "target": "PT_8313A",
+      "relation": "HAS_SENSOR",
+      "point": "upper furnace, point A",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "furnace",
+      "target": "PT_8313B",
+      "relation": "HAS_SENSOR",
+      "point": "upper furnace, point B",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "furnace",
+      "target": "PT_8313C",
+      "relation": "HAS_SENSOR",
+      "point": "upper furnace, point C",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "furnace",
+      "target": "PT_8313D",
+      "relation": "HAS_SENSOR",
+      "point": "upper furnace, point D",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "furnace",
+      "target": "PT_8313E",
+      "relation": "HAS_SENSOR",
+      "point": "upper furnace, point E",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "furnace",
+      "target": "PT_8313F",
+      "relation": "HAS_SENSOR",
+      "point": "upper furnace, point F",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "steam_drum",
+      "target": "PTCA_8322A",
+      "relation": "HAS_SENSOR",
+      "point": "drum pressure",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "steam_outlet",
+      "target": "PTCA_8324",
+      "relation": "HAS_SENSOR",
+      "point": "boiler outlet",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "lower_stage_economiser",
+      "target": "TE_8319A",
+      "relation": "HAS_SENSOR",
+      "point": "flue gas outlet, left duct",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "lower_stage_economiser",
+      "target": "TE_8319B",
+      "relation": "HAS_SENSOR",
+      "point": "flue gas outlet, right duct",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "furnace",
+      "target": "TE_8313B",
+      "relation": "HAS_SENSOR",
+      "point": "upper furnace, right side",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "primary_air_preheater",
+      "target": "TE_8303",
+      "relation": "HAS_SENSOR",
+      "point": "air outlet",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "secondary_air_preheater_2",
+      "target": "TE_8304",
+      "relation": "HAS_SENSOR",
+      "point": "air outlet (final stage)",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "steam_outlet",
+      "target": "TE_8332A",
+      "relation": "HAS_SENSOR",
+      "point": "boiler outlet - PRIMARY KPI",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "primary_desuperheater_spray_valve",
+      "target": "TV_8329ZC",
+      "relation": "HAS_SENSOR",
+      "point": "valve position",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "primary_fan",
+      "target": "FT_8301",
+      "relation": "HAS_SENSOR",
+      "point": "outlet",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "secondary_fan",
+      "target": "FT_8302",
+      "relation": "HAS_SENSOR",
+      "point": "outlet",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "return_air_injection_left",
+      "target": "FT_8306A",
+      "relation": "HAS_SENSOR",
+      "point": "return air chamber flow",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "return_air_injection_right",
+      "target": "FT_8306B",
+      "relation": "HAS_SENSOR",
+      "point": "return air chamber flow",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "upper_stage_economiser",
+      "target": "AIR_8301A",
+      "relation": "HAS_SENSOR",
+      "point": "flue gas inlet, left duct",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "upper_stage_economiser",
+      "target": "AIR_8301B",
+      "relation": "HAS_SENSOR",
+      "point": "flue gas inlet, right duct",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "induced_draft_fan",
+      "target": "YFJ3_AI",
+      "relation": "HAS_SENSOR",
+      "point": "motor current",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "induced_draft_fan",
+      "target": "YFJ3_ZD1",
+      "relation": "HAS_SENSOR",
+      "point": "bearing vibration, drive end",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "induced_draft_fan",
+      "target": "YFJ3_ZD2",
+      "relation": "HAS_SENSOR",
+      "point": "bearing vibration, non-drive end",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "furnace",
+      "target": "SXLTCYZ",
+      "relation": "HAS_SENSOR",
+      "point": "hearth differential pressure, left",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "furnace",
+      "target": "SXLTCYY",
+      "relation": "HAS_SENSOR",
+      "point": "hearth differential pressure, right",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "cyclone_separator_left",
+      "target": "ZCLCCY",
+      "relation": "HAS_SENSOR",
+      "point": "differential pressure",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "cyclone_separator_right",
+      "target": "YCLCCY",
+      "relation": "HAS_SENSOR",
+      "point": "differential pressure",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "primary_desuperheater",
+      "target": "YJJWSLL",
+      "relation": "HAS_SENSOR",
+      "point": "spray water flow",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "steam_outlet",
+      "target": "ZZQBCHLL",
+      "relation": "HAS_SENSOR",
+      "point": "compensated main steam flow",
+      "provenance": "columns_csv+pfd"
+    },
+    {
+      "source": "coal_bin",
+      "target": "coal_feeder",
+      "relation": "CONNECTS_TO",
+      "stream": "Coal",
+      "hop": 1,
+      "provenance": "pfd"
+    },
+    {
+      "source": "coal_feeder",
+      "target": "furnace",
+      "relation": "CONNECTS_TO",
+      "stream": "Coal",
+      "hop": 2,
+      "provenance": "pfd"
+    },
+    {
+      "source": "furnace",
+      "target": "cyclone_separator_left",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 1,
+      "provenance": "pfd"
+    },
+    {
+      "source": "cyclone_separator_left",
+      "target": "high_temp_superheater",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 2,
+      "provenance": "pfd"
+    },
+    {
+      "source": "furnace",
+      "target": "cyclone_separator_right",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 1,
+      "provenance": "pfd"
+    },
+    {
+      "source": "cyclone_separator_right",
+      "target": "high_temp_superheater",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 2,
+      "provenance": "pfd"
+    },
+    {
+      "source": "high_temp_superheater",
+      "target": "low_temp_superheater",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 3,
+      "provenance": "pfd"
+    },
+    {
+      "source": "low_temp_superheater",
+      "target": "upper_stage_economiser",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 4,
+      "provenance": "pfd"
+    },
+    {
+      "source": "upper_stage_economiser",
+      "target": "lower_stage_economiser",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 5,
+      "provenance": "pfd"
+    },
+    {
+      "source": "lower_stage_economiser",
+      "target": "secondary_air_preheater_1",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 6,
+      "provenance": "pfd"
+    },
+    {
+      "source": "secondary_air_preheater_1",
+      "target": "primary_air_preheater",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 7,
+      "provenance": "pfd"
+    },
+    {
+      "source": "primary_air_preheater",
+      "target": "secondary_air_preheater_2",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 8,
+      "provenance": "pfd"
+    },
+    {
+      "source": "secondary_air_preheater_2",
+      "target": "induced_draft_fan",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 9,
+      "provenance": "pfd"
+    },
+    {
+      "source": "induced_draft_fan",
+      "target": "chimney",
+      "relation": "CONNECTS_TO",
+      "stream": "FlueGas",
+      "hop": 10,
+      "provenance": "pfd"
+    },
+    {
+      "source": "cyclone_separator_left",
+      "target": "loop_seal_chamber_left",
+      "relation": "CONNECTS_TO",
+      "stream": "Solids",
+      "hop": 1,
+      "provenance": "pfd"
+    },
+    {
+      "source": "loop_seal_chamber_left",
+      "target": "rewind_fan_interlock_valve",
+      "relation": "CONNECTS_TO",
+      "stream": "Solids",
+      "hop": 2,
+      "provenance": "pfd"
+    },
+    {
+      "source": "rewind_fan_interlock_valve",
+      "target": "return_air_injection_left",
+      "relation": "CONNECTS_TO",
+      "stream": "Solids",
+      "hop": 3,
+      "provenance": "pfd"
+    },
+    {
+      "source": "return_air_injection_left",
+      "target": "furnace",
+      "relation": "CONNECTS_TO",
+      "stream": "Solids",
+      "hop": 4,
+      "provenance": "pfd"
+    },
+    {
+      "source": "cyclone_separator_right",
+      "target": "ash_reclaimer_right",
+      "relation": "CONNECTS_TO",
+      "stream": "Solids",
+      "hop": 1,
+      "provenance": "inferred",
+      "note": "Right-leg mirrored from the left leg; Fig. 3 draws one explicit 'Return Air' point and this topology is inferred to match it."
+    },
+    {
+      "source": "ash_reclaimer_right",
+      "target": "return_air_injection_right",
+      "relation": "CONNECTS_TO",
+      "stream": "Solids",
+      "hop": 2,
+      "provenance": "inferred",
+      "note": "Right-leg mirrored from the left leg; Fig. 3 draws one explicit 'Return Air' point and this topology is inferred to match it."
+    },
+    {
+      "source": "return_air_injection_right",
+      "target": "furnace",
+      "relation": "CONNECTS_TO",
+      "stream": "Solids",
+      "hop": 3,
+      "provenance": "inferred",
+      "note": "Right-leg mirrored from the left leg; Fig. 3 draws one explicit 'Return Air' point and this topology is inferred to match it."
+    },
+    {
+      "source": "primary_fan",
+      "target": "primary_air_preheater",
+      "relation": "CONNECTS_TO",
+      "stream": "PrimaryAir",
+      "hop": 1,
+      "provenance": "pfd",
+      "note": "Fluidizing air to the furnace windbox/grate."
+    },
+    {
+      "source": "primary_air_preheater",
+      "target": "furnace",
+      "relation": "CONNECTS_TO",
+      "stream": "PrimaryAir",
+      "hop": 2,
+      "provenance": "pfd",
+      "note": "Fluidizing air to the furnace windbox/grate."
+    },
+    {
+      "source": "secondary_fan",
+      "target": "secondary_air_preheater_1",
+      "relation": "CONNECTS_TO",
+      "stream": "SecondaryAir",
+      "hop": 1,
+      "provenance": "pfd",
+      "note": "Overfire / secondary combustion air, preheated across both secondary APH stages."
+    },
+    {
+      "source": "secondary_air_preheater_1",
+      "target": "secondary_air_preheater_2",
+      "relation": "CONNECTS_TO",
+      "stream": "SecondaryAir",
+      "hop": 2,
+      "provenance": "pfd",
+      "note": "Overfire / secondary combustion air, preheated across both secondary APH stages."
+    },
+    {
+      "source": "secondary_air_preheater_2",
+      "target": "furnace",
+      "relation": "CONNECTS_TO",
+      "stream": "SecondaryAir",
+      "hop": 3,
+      "provenance": "pfd",
+      "note": "Overfire / secondary combustion air, preheated across both secondary APH stages."
+    },
+    {
+      "source": "secondary_fan",
+      "target": "loop_seal_chamber_left",
+      "relation": "CONNECTS_TO",
+      "stream": "SecondaryAir",
+      "hop": 1,
+      "provenance": "pfd",
+      "note": "Fig. 3 labels this tap 'secondary wind' -- aeration/fluidizing air for the loop seal, not furnace combustion air (parallel branch off the secondary fan, not inline with the furnace-bound secondary air path)."
+    },
+    {
+      "source": "mains_water_supply",
+      "target": "lower_stage_economiser",
+      "relation": "CONNECTS_TO",
+      "stream": "FeedWater",
+      "hop": 1,
+      "provenance": "inferred",
+      "note": "Fig. 3 labels the economiser return path only as 'to mains water supply'; routed here to the inferred steam drum, which is the standard destination for economiser outlet in this boiler type. VERIFY."
+    },
+    {
+      "source": "lower_stage_economiser",
+      "target": "upper_stage_economiser",
+      "relation": "CONNECTS_TO",
+      "stream": "FeedWater",
+      "hop": 2,
+      "provenance": "inferred",
+      "note": "Fig. 3 labels the economiser return path only as 'to mains water supply'; routed here to the inferred steam drum, which is the standard destination for economiser outlet in this boiler type. VERIFY."
+    },
+    {
+      "source": "upper_stage_economiser",
+      "target": "steam_drum",
+      "relation": "CONNECTS_TO",
+      "stream": "FeedWater",
+      "hop": 3,
+      "provenance": "inferred",
+      "note": "Fig. 3 labels the economiser return path only as 'to mains water supply'; routed here to the inferred steam drum, which is the standard destination for economiser outlet in this boiler type. VERIFY."
+    },
+    {
+      "source": "steam_drum",
+      "target": "low_temp_superheater",
+      "relation": "CONNECTS_TO",
+      "stream": "Steam",
+      "hop": 1,
+      "provenance": "pfd"
+    },
+    {
+      "source": "low_temp_superheater",
+      "target": "primary_desuperheater",
+      "relation": "CONNECTS_TO",
+      "stream": "Steam",
+      "hop": 2,
+      "provenance": "pfd"
+    },
+    {
+      "source": "primary_desuperheater",
+      "target": "high_temp_superheater",
+      "relation": "CONNECTS_TO",
+      "stream": "Steam",
+      "hop": 3,
+      "provenance": "pfd"
+    },
+    {
+      "source": "high_temp_superheater",
+      "target": "secondary_desuperheater",
+      "relation": "CONNECTS_TO",
+      "stream": "Steam",
+      "hop": 4,
+      "provenance": "pfd"
+    },
+    {
+      "source": "secondary_desuperheater",
+      "target": "steam_outlet",
+      "relation": "CONNECTS_TO",
+      "stream": "Steam",
+      "hop": 5,
+      "provenance": "pfd"
+    },
+    {
+      "source": "mains_water_supply",
+      "target": "primary_desuperheater_spray_valve",
+      "relation": "CONNECTS_TO",
+      "stream": "DesuperheatingWater",
+      "provenance": "pfd"
+    },
+    {
+      "source": "primary_desuperheater_spray_valve",
+      "target": "primary_desuperheater",
+      "relation": "CONNECTS_TO",
+      "stream": "DesuperheatingWater",
+      "provenance": "pfd"
+    },
+    {
+      "source": "mains_water_supply",
+      "target": "secondary_desuperheater_spray_valves",
+      "relation": "CONNECTS_TO",
+      "stream": "DesuperheatingWater",
+      "provenance": "pfd"
+    },
+    {
+      "source": "secondary_desuperheater_spray_valves",
+      "target": "secondary_desuperheater",
+      "relation": "CONNECTS_TO",
+      "stream": "DesuperheatingWater",
+      "provenance": "pfd"
+    },
+    {
+      "source": "steam_drum",
+      "target": "continuous_blowdown_valve",
+      "relation": "CONNECTS_TO",
+      "stream": "ContinuousBlowdown",
+      "provenance": "pfd"
+    },
+    {
+      "source": "continuous_blowdown_valve",
+      "target": "steamer_bag",
+      "relation": "CONNECTS_TO",
+      "stream": "ContinuousBlowdown",
+      "provenance": "pfd"
+    },
+    {
+      "source": "steam_temp_attemperation_primary",
+      "target": "TE_8332A",
+      "relation": "HAS_PV",
+      "provenance": "columns_csv"
+    },
+    {
+      "source": "steam_temp_attemperation_primary",
+      "target": "primary_desuperheater_spray_valve",
+      "relation": "HAS_MANIPULATED_VARIABLE",
+      "provenance": "columns_csv"
+    },
+    {
+      "source": "steam_temp_attemperation_primary",
+      "target": "YJJWSLL",
+      "relation": "HAS_FEEDBACK",
+      "provenance": "columns_csv"
+    },
+    {
+      "source": "steam_temp_attemperation_primary",
+      "target": "primary_desuperheater",
+      "relation": "ACTS_ON",
+      "provenance": "columns_csv"
+    },
+    {
+      "source": "furnace_draft_balance",
+      "target": "PT_8313A",
+      "relation": "HAS_PV",
+      "provenance": "inferred"
+    },
+    {
+      "source": "furnace_draft_balance",
+      "target": "PT_8313B",
+      "relation": "HAS_PV",
+      "provenance": "inferred"
+    },
+    {
+      "source": "furnace_draft_balance",
+      "target": "PT_8313C",
+      "relation": "HAS_PV",
+      "provenance": "inferred"
+    },
+    {
+      "source": "furnace_draft_balance",
+      "target": "PT_8313D",
+      "relation": "HAS_PV",
+      "provenance": "inferred"
+    },
+    {
+      "source": "furnace_draft_balance",
+      "target": "PT_8313E",
+      "relation": "HAS_PV",
+      "provenance": "inferred"
+    },
+    {
+      "source": "furnace_draft_balance",
+      "target": "PT_8313F",
+      "relation": "HAS_PV",
+      "provenance": "inferred"
+    },
+    {
+      "source": "furnace_draft_balance",
+      "target": "induced_draft_fan",
+      "relation": "HAS_MANIPULATED_VARIABLE",
+      "provenance": "inferred"
+    },
+    {
+      "source": "furnace_draft_balance",
+      "target": "primary_fan",
+      "relation": "HAS_MANIPULATED_VARIABLE",
+      "provenance": "inferred"
+    },
+    {
+      "source": "furnace_draft_balance",
+      "target": "secondary_fan",
+      "relation": "HAS_MANIPULATED_VARIABLE",
+      "provenance": "inferred"
+    },
+    {
+      "source": "combustion_o2_trim",
+      "target": "AIR_8301A",
+      "relation": "HAS_PV",
+      "provenance": "inferred"
+    },
+    {
+      "source": "combustion_o2_trim",
+      "target": "AIR_8301B",
+      "relation": "HAS_PV",
+      "provenance": "inferred"
+    },
+    {
+      "source": "combustion_o2_trim",
+      "target": "primary_fan",
+      "relation": "HAS_MANIPULATED_VARIABLE",
+      "provenance": "inferred"
+    },
+    {
+      "source": "combustion_o2_trim",
+      "target": "secondary_fan",
+      "relation": "HAS_MANIPULATED_VARIABLE",
+      "provenance": "inferred"
+    },
+    {
+      "source": "combustion_o2_trim",
+      "target": "FT_8301",
+      "relation": "HAS_FEEDBACK",
+      "provenance": "inferred"
+    },
+    {
+      "source": "combustion_o2_trim",
+      "target": "FT_8302",
+      "relation": "HAS_FEEDBACK",
+      "provenance": "inferred"
+    },
+    {
+      "source": "bed_inventory_recirculation",
+      "target": "FT_8306A",
+      "relation": "RELATES_TO",
+      "provenance": "inferred"
+    },
+    {
+      "source": "bed_inventory_recirculation",
+      "target": "FT_8306B",
+      "relation": "RELATES_TO",
+      "provenance": "inferred"
+    },
+    {
+      "source": "bed_inventory_recirculation",
+      "target": "SXLTCYZ",
+      "relation": "RELATES_TO",
+      "provenance": "inferred"
+    },
+    {
+      "source": "bed_inventory_recirculation",
+      "target": "SXLTCYY",
+      "relation": "RELATES_TO",
+      "provenance": "inferred"
+    },
+    {
+      "source": "bed_inventory_recirculation",
+      "target": "ZCLCCY",
+      "relation": "RELATES_TO",
+      "provenance": "inferred"
+    },
+    {
+      "source": "bed_inventory_recirculation",
+      "target": "YCLCCY",
+      "relation": "RELATES_TO",
+      "provenance": "inferred"
+    },
+    {
+      "source": "bed_inventory_recirculation",
+      "target": "loop_seal_chamber_left",
+      "relation": "RELATES_TO",
+      "provenance": "inferred"
+    },
+    {
+      "source": "bed_inventory_recirculation",
+      "target": "ash_reclaimer_right",
+      "relation": "RELATES_TO",
+      "provenance": "inferred"
+    }
+  ]
+}

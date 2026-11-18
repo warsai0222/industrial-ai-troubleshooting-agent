@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "plant-troubleshooting": {
+      "command": "/absolute/path/to/industrial-ai-troubleshooting-agent/.venv/bin/python",
+      "args": ["-m", "mcp_server.server"],
+      "cwd": "/absolute/path/to/industrial-ai-troubleshooting-agent"
+    }
+  }
+}
